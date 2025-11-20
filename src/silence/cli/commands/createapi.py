@@ -1,0 +1,14 @@
+from ...settings import settings
+
+
+def handle(args):
+    from ...server.endpoint_creator import create_api
+
+    if settings.ENABLE_ENDPOINT_AUTO_GENERATION:
+        print("Creating the default endpoints and generating the API files...")
+        create_api()
+        print("Done!")
+    else:
+        print(
+            "Endpoint auto generation is disabled in the settings, you need to enable it before you can use this command."
+        )

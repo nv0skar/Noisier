@@ -1,8 +1,12 @@
-<p align="center"><img width="100%" src="img/logo.svg" alt="Silence logo"></p>
+<p align="center"><img width="100%" src="_img/logo.svg" alt="Silence logo"></p>
 <p align="center">
 <a href="https://github.com/DEAL-US/Silence/actions/workflows/ci_test.yml"><img src="https://github.com/DEAL-US/Silence/actions/workflows/ci_test.yml/badge.svg"></a> 
 <a href="https://pypi.org/project/Silence/"><img src="https://img.shields.io/pypi/v/Silence.svg?label=Version"></a>
 <a href="https://pepy.tech/project/silence"><img src="https://static.pepy.tech/personalized-badge/silence?period=total&units=international_system&left_color=grey&right_color=orange&left_text=Downloads"></a>&nbsp;<img src="https://img.shields.io/badge/Python-3.8%20%E2%80%94%203.12-blue"></p>
+
+<hr>
+
+> ⚠️ Welcome to Noisier! A Silence Remix that attempts to improve performance, usability and safety.
 
 <hr>
 
@@ -12,7 +16,7 @@ Check out [**Silence's wiki page**](https://github.com/DEAL-US/Silence/wiki) to 
 
 Silence has been built by the [**DEAL research group**](https://deal.us.es/) as an educational and teaching tool for its use in several courses of the Degree in Computer Science at the University of Seville.
 
-![SVG animation showing the process of creating a new project, configuring it, creating the database and API endpoints, and running it](img/setup.svg)
+![SVG animation showing the process of creating a new project, configuring it, creating the database and API endpoints, and running it](_img/setup.svg)
 
 # Documentation and changelog
 Please see [**Silence's wiki**](https://github.com/DEAL-US/Silence/wiki) and [**CHANGELOG.md**](CHANGELOG.md)
