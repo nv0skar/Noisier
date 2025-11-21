@@ -1,0 +1,31 @@
+[general]
+auto_endpoints = true
+endpoint_statistics = true
+display_endpoints_on_start = true
+colored_output = true
+default_template = ["IISSI-US", "employees"]
+check_latest_version = true
+
+[server]
+listen_addr = ["127.0.0.1", 8080]
+http_cache_time = 0
+api_prefix = "/api"
+serve_api = true
+serve_static_files = true
+summary_endpoint = false
+
+[app]
+admin_panel = true
+
+[app.auth]
+enable = true
+user_auth_table = "users"
+user_auth_field = "email"
+max_token_age = 86400
+allow_signup = true
+
+[db_conn]
+host = ["127.0.0.1", 3306]
+username = "tu_mami"
+password = "default_password"
+db = "default_db"

@@ -2,13 +2,13 @@
 import decimal
 from flask import json
 
-from .. import settings
+from silence.__main__ import CONFIG
 
 
 class SilenceJSONEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, decimal.Decimal):
-            func = str if settings.DECIMALS_AS_STRINGS else float
+            func = str if CONFIG.DECIMALS_AS_STRINGS else float
             return func(o)
         elif hasattr(o, "isoformat"):
             # Dates, times and datetimes should be formatted following ISO-8601

@@ -1,10 +1,12 @@
 from pypika import Table
 from pypika import MySQLQuery as Query
 
+
 def get_login_query(table_name, id_name, id_value):
     users = Table(table_name)
-    q = Query.from_(users).select('*').where(users[id_name] == id_value)
+    q = Query.from_(users).select("*").where(users[id_name] == id_value)
     return str(q)
+
 
 def get_register_user_query(table_name, user):
     field_names = tuple(k for k in user)

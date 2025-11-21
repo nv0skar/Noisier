@@ -1,4 +1,4 @@
-from ..settings import settings
+from silence.__main__ import CONFIG
 
 from logging import StreamHandler
 import threading
@@ -13,7 +13,7 @@ class MaybeBlockingHandler(StreamHandler):
         # when running on Windows. This happens because stdout in Windows
         # must be flushed after every color change, which sometimes makes
         # colored log messages overlap.
-        if settings.COLORED_OUTPUT and platform.system() == "Windows":
+        if CONFIG.general.colored_output and platform.system() == "Windows":
             self._write_lock = threading.Lock()
         else:
             # Otherwise, we use a dummy "Lock" that does nothing

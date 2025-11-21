@@ -3,11 +3,11 @@ import json
 from os import listdir, getcwd, path, mkdir
 from flask import jsonify
 
-from ..server import manager as server_manager
-from ..server import endpoint as server_endpoint
+from silence.server import manager as server_manager
+from silence.server import endpoint as server_endpoint
 
-from ..settings import settings
-from ..logging.default_logger import logger
+from silence.__main__ import CONFIG
+from silence.logging.default_logger import logger
 
 
 # SILENCE RUN OPERATIONS
@@ -18,7 +18,7 @@ from ..logging.default_logger import logger
 # and generate the endpoints for them.
 ###############################################################################
 def load_user_endpoints():
-    logger.debug("Looking for custom endpoints...")
+    logger.debug("Looking for custom endpointssilence.")
 
     # Load every .json file inside the endpoints/ or api/ folders
     curr_dir = getcwd()
@@ -66,11 +66,11 @@ def load_user_endpoints():
 def load_default_endpoints():
     from server import default_endpoints
 
-    route_prefix = settings.API_PREFIX
+    route_prefix = CONFIG.API_PREFIX
     if route_prefix.endswith("/"):
         route_prefix = route_prefix[:-1]
 
-    if settings.ENABLE_SUMMARY:
+    if CONFIG.ENABLE_SUMMARY:
         server_manager.API_SUMMARY.register_endpoint(
             {
                 "route": route_prefix,
@@ -82,7 +82,7 @@ def load_default_endpoints():
             route_prefix, "APItreeHELP", show_api_endpoints, methods=["GET"]
         )
 
-    if settings.ENABLE_LOGIN:
+    if CONFIG.ENABLE_LOGIN:
         login_route = f"{route_prefix}/login"
         server_manager.API_SUMMARY.register_endpoint(
             {
@@ -95,7 +95,7 @@ def load_default_endpoints():
             login_route, "login", default_endpoints.login, methods=["POST"]
         )
 
-    if settings.ENABLE_REGISTER:
+    if CONFIG.ENABLE_REGISTER:
         register_route = f"{route_prefix}/register"
         server_manager.API_SUMMARY.register_endpoint(
             {

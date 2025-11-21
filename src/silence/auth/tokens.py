@@ -1,31 +1,31 @@
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from itsdangerous.exc import BadSignature, SignatureExpired
 
-from ..settings import settings
-from ..exceptions import TokenError
-from ..logging.default_logger import logger
-from ..utils.silence_json_encoder import SilenceJSONSerializer
+from silence.__main__ import CONFIG
+from silence.exceptions import TokenError
+from silence.logging.default_logger import logger
+from silence.utils.silence_json_encoder import SilenceJSONSerializer
 
 ###############################################################################
 # Token management: creation and checking
 ###############################################################################
 
-auth = Serializer(settings.SECRET_KEY, serializer=SilenceJSONSerializer)
+auth = Serializer("hello", serializer=SilenceJSONSerializer)
 
 
 def create_token(data):
     """Creates and returns a new token containing the given user data"""
     token = auth.dumps(data)
-    logger.debug("Created new token %s[...]%s", token[:6], token[-6:])
+    logger.debug("Created new token %s[silence.]%s", token[:6], token[-6:])
     return token
 
 
 def check_token(token):
     """Checks whether the provided token is valid. Returns the user's data
     contained inside the token if it is, otherwise raises a TokenError."""
-    logger.debug("Checking received token %s[...]%s", token[:6], token[-6:])
+    logger.debug("Checking received token %s[silence.]%s", token[:6], token[-6:])
     try:
-        user_data = auth.loads(token, max_age=settings.MAX_TOKEN_AGE)
+        user_data = auth.loads(token, max_age=CONFIG.app.auth.max_token_age)
         logger.debug("The token is correct")
         return user_data
     except SignatureExpired:

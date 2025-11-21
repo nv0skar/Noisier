@@ -1,5 +1,5 @@
-from ..settings import settings
-from ..db.connector import get_conn
+from silence.__main__ import CONFIG
+from silence.db.connector import get_conn
 
 #
 # Reads and executes the SQL scripts needed to create the database
@@ -10,13 +10,13 @@ from ..db.connector import get_conn
 def create_database():
     conn = get_conn()
     cursor = conn.cursor()
-    db_name = settings.DB_CONN["database"]
+    db_name = CONFIG.DB_CONN["database"]
 
     cursor.execute(f"DROP DATABASE IF EXISTS `{db_name}`")
     cursor.execute(f"CREATE DATABASE `{db_name}`")
     conn.commit()
 
-    for script in settings.SQL_SCRIPTS:
+    for script in CONFIG.SQL_SCRIPTS:
         cursor.execute(f"USE `{db_name}`")
         print_str = f"Executing {script}:"
         print_aux_len = len(print_str) + 2

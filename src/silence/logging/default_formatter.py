@@ -1,18 +1,8 @@
-import logging
-import colorama
+from silence.utils import append_color_log
 
 from colorama import Fore, Style
-from ..settings import settings
 
-if settings.COLORED_OUTPUT:
-    colorama.init()
-
-
-def add_color(color, format_str):
-    if settings.COLORED_OUTPUT:
-        return Style.BRIGHT + color + format_str + Style.RESET_ALL
-    else:
-        return format_str
+import logging
 
 
 class DefaultFormatter(logging.Formatter):
@@ -20,11 +10,11 @@ class DefaultFormatter(logging.Formatter):
     format_lvl = "[%(levelname)s] %(message)s"
 
     FORMATS = {
-        logging.DEBUG: add_color(Fore.BLACK, format_lvl),
+        logging.DEBUG: append_color_log(Fore.BLACK, format_lvl),
         logging.INFO: format_nolvl,
-        logging.WARNING: add_color(Fore.YELLOW, format_lvl),
-        logging.ERROR: add_color(Fore.RED, format_lvl),
-        logging.CRITICAL: add_color(Fore.RED, format_lvl),
+        logging.WARNING: append_color_log(Fore.YELLOW, format_lvl),
+        logging.ERROR: append_color_log(Fore.RED, format_lvl),
+        logging.CRITICAL: append_color_log(Fore.RED, format_lvl),
     }
 
     def format(self, record):

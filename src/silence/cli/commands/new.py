@@ -1,5 +1,5 @@
-from ...settings import settings
-from ...cli.template_downloader import download_from_github
+from silence.__main__ import CONFIG
+from silence.cli.template_retrieve import download_from_github
 
 
 def handle(args):
@@ -7,7 +7,7 @@ def handle(args):
 
     if all(not args[k] for k in ("blank", "url", "template")):
         # No extra args provided, use the default template
-        args["template"] = settings.DEFAULT_TEMPLATE_NAME
+        args["template"] = CONFIG.general.default_template[1]
     elif args["blank"]:
         args["template"] = "blank"
 
@@ -15,7 +15,7 @@ def handle(args):
     project_name = args["name"]
 
     if template:
-        repo_url = f"https://github.com/{settings.GITHUB_TEMPLATES_OWNER}/silence-template-v2-{template}"
+        repo_url = f"https://github.com/{CONFIG.general.default_template[0]}/silence-template-v2-{CONFIG.general.default_template[1]}"
     else:
         # We have to download a repo from a URL
         repo_url = args["url"]

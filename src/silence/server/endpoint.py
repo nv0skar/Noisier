@@ -3,18 +3,18 @@ import re
 
 from flask import jsonify, request
 
-from ..db import dal
-from ..sql import sql as SQL
-from ..sql import get_sql_op
-from ..settings import settings
-from ..utils.min_type import Min
-from ..auth.tokens import check_token
-from ..sql.tables import get_primary_key
-from ..logging.default_logger import logger
-from ..logging import utils as log_utils
-from ..sql.converter import silence_to_mysql
-from ..server import manager as server_manager
-from ..exceptions import HTTPError, TokenError
+from silence.db import dal
+from silence import sql as SQL
+from silence.sql import get_sql_op
+from silence.__main__ import CONFIG
+from silence.utils.min_type import Min
+from silence.auth.tokens import check_token
+from silence.sql.tables import get_primary_key
+from silence.logging.default_logger import logger
+from silence.logging import utils as log_utils
+from silence.sql.converter import silence_to_mysql
+from silence.server import manager as server_manager
+from silence.exceptions import HTTPError, TokenError
 
 OP_VERBS = {
     SQL.SELECT: "get",
@@ -53,7 +53,7 @@ def setup_endpoint(
         )
 
     # Construct the API route taking the prefix into account
-    route_prefix = settings.API_PREFIX
+    route_prefix = CONFIG.API_PREFIX
     if route_prefix.endswith("/"):
         route_prefix = route_prefix[:-1]  # Drop the final /
     full_route = route_prefix + route
@@ -142,7 +142,7 @@ def setup_endpoint(
             for param in url_params:
                 body_params[param] = request_url_params_dict[param]
 
-            if settings.DISPLAY_BODY_PARAMS_CLI:
+            if CONFIG.DISPLAY_BODY_PARAMS_CLI:
                 logger.info(
                     log_utils.format_custom_record(
                         "api", "yellow", f"PARAMS {body_params}"
@@ -198,7 +198,7 @@ def check_session(logged_user_data, allowed_roles):
         raise HTTPError(401, "Unauthorized")
 
     # Check if the user's role is allowed to access this endpoint
-    role_col_name = settings.USER_AUTH_DATA.get("role", None)
+    role_col_name = CONFIG.USER_AUTH_DATA.get("role", None)
 
     if role_col_name:  # Only check the role if we know the role column
         # Find the role of the user from the user data
@@ -226,7 +226,7 @@ def get_current_user_id(logged_user_data):
     userID = None
 
     if logged_user_data is not None:
-        users_table = settings.USER_AUTH_DATA["table"]
+        users_table = CONFIG.USER_AUTH_DATA["table"]
         pk = get_primary_key(users_table)
         userID = (
             logged_user_data[pk] if pk else None

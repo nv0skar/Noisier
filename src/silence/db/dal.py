@@ -1,9 +1,9 @@
 from pymysql.cursors import DictCursor
 
-from ..db.connector import get_conn
-from ..exceptions import DatabaseError
-from ..decorators import db_call
-from ..logging.default_logger import logger
+from silence.db.connector import get_conn
+from silence.exceptions import DatabaseError
+from silence.decorators import db_call
+from silence.logging.default_logger import logger
 
 #
 # The DAL (Data Access Layer) functions provide an abstraction layer

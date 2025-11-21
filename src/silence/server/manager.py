@@ -3,13 +3,13 @@ from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 import click
 
-from server.endpoint_loader import load_user_endpoints, load_default_endpoints
-from settings import settings
-from exceptions import HTTPError
-from logging.default_logger import logger
-from logging.flask_filter import FlaskFilter
-from utils.silence_json_encoder import SilenceJSONEncoder
-from server.api_summary import APISummary
+from silence.server.endpoint_loader import load_user_endpoints, load_default_endpoints
+from silence.__main__ import CONFIG
+from silence.exceptions import HTTPError
+from silence.logging.default_logger import logger
+from silence.logging.flask_filter import FlaskFilter
+from silence.utils.silence_json_encoder import SilenceJSONEncoder
+from silence.server.api_summary import APISummary
 
 from os.path import join
 from os import getcwd
@@ -21,17 +21,17 @@ import logging
 # configuring it and deploying the endpoints and web app.
 ###############################################################################
 
-static_folder = join(getcwd(), "web") if settings.RUN_WEB else None
+static_folder = join(getcwd(), "web") if CONFIG.RUN_WEB else None
 APP = Flask(__name__, static_folder=static_folder)
-cors = CORS(APP, resources={f"{settings.API_PREFIX}*": {"origins": "*"}})
+cors = CORS(APP, resources={f"{CONFIG.API_PREFIX}*": {"origins": "*"}})
 API_SUMMARY = APISummary()
 
 
 def setup():
     # Configures the web server
-    APP.secret_key = settings.SECRET_KEY
+    APP.secret_key = CONFIG.SECRET_KEY
     APP.config["SESSION_TYPE"] = "filesystem"
-    APP.config["SEND_FILE_MAX_AGE_DEFAULT"] = settings.HTTP_CACHE_TIME
+    APP.config["SEND_FILE_MAX_AGE_DEFAULT"] = CONFIG.HTTP_CACHE_TIME
 
     # Mute Flask's startup messages
     def noop(*args, **kwargs):
@@ -74,7 +74,7 @@ def setup():
         # We're facing an uncontrolled server exception
         # Only show the full stack trace in debug mode
         # Otherwise, just show the exception message
-        if settings.DEBUG_ENABLED:
+        if CONFIG.DEBUG_ENABLED:
             logger.exception(exc)
         else:
             error_msg = str(exc)
@@ -88,7 +88,7 @@ def setup():
 
     # Check if clear text passwords can be used for login, and show a warning
     # if that is the case
-    if settings.ALLOW_CLEAR_PASSWORDS:
+    if CONFIG.ALLOW_CLEAR_PASSWORDS:
         logger.warning(
             "This project allows clear text passwords in the DB to be used for login\n"
             + "(ALLOW_CLEAR_PASSWORDS = True)\n"
@@ -96,15 +96,15 @@ def setup():
         )
 
     # Load the user-provided API endpoints and the default ones
-    if settings.RUN_API:
+    if CONFIG.RUN_API:
         load_default_endpoints()
         load_user_endpoints()
 
-        if settings.SHOW_ENDPOINT_LIST:
+        if CONFIG.SHOW_ENDPOINT_LIST:
             API_SUMMARY.print_endpoints()
 
     # Load the web static files
-    if settings.RUN_WEB:
+    if CONFIG.RUN_WEB:
         logger.debug("Setting up web server")
 
         @APP.route("/")
@@ -118,8 +118,8 @@ def setup():
 
 def run():
     APP.run(
-        host=settings.LISTEN_ADDRESS,
-        port=settings.HTTP_PORT,
-        debug=settings.DEBUG_ENABLED,
+        host=CONFIG.LISTEN_ADDRESS,
+        port=CONFIG.HTTP_PORT,
+        debug=CONFIG.DEBUG_ENABLED,
         threaded=True,
     )

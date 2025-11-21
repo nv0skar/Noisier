@@ -1,5 +1,5 @@
 from functools import wraps
-from ..exceptions import HTTPError, DatabaseError
+from silence.exceptions import HTTPError, DatabaseError
 
 import re
 

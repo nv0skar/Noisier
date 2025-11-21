@@ -1,5 +1,5 @@
-from ..settings import settings
-from ..logging.default_logger import logger
+from silence.__main__ import CONFIG
+from silence.logging.default_logger import logger
 
 import colorama
 from colorama import Fore, Style
@@ -23,14 +23,14 @@ RE_LOG = re.compile(r'(.*) - - \[.*\] "%s" %s %s')
 RE_REQ_DATA = re.compile(r"(\w+) (/.*) HTTP.*")
 
 COLORS = {
-    "GREEN": Style.BRIGHT + Fore.GREEN if settings.COLORED_OUTPUT else "",
-    "MAGENTA": Style.BRIGHT + Fore.MAGENTA if settings.COLORED_OUTPUT else "",
-    "CYAN": Style.BRIGHT + Fore.CYAN if settings.COLORED_OUTPUT else "",
-    "YELLOW": Style.BRIGHT + Fore.YELLOW if settings.COLORED_OUTPUT else "",
-    "RED": Style.BRIGHT + Fore.RED if settings.COLORED_OUTPUT else "",
-    "WHITE": Style.BRIGHT + Fore.WHITE if settings.COLORED_OUTPUT else "",
+    "GREEN": Style.BRIGHT + Fore.GREEN if CONFIG.COLORED_OUTPUT else "",
+    "MAGENTA": Style.BRIGHT + Fore.MAGENTA if CONFIG.COLORED_OUTPUT else "",
+    "CYAN": Style.BRIGHT + Fore.CYAN if CONFIG.COLORED_OUTPUT else "",
+    "YELLOW": Style.BRIGHT + Fore.YELLOW if CONFIG.COLORED_OUTPUT else "",
+    "RED": Style.BRIGHT + Fore.RED if CONFIG.COLORED_OUTPUT else "",
+    "WHITE": Style.BRIGHT + Fore.WHITE if CONFIG.COLORED_OUTPUT else "",
 }
-RESET = Style.RESET_ALL if settings.COLORED_OUTPUT else ""
+RESET = Style.RESET_ALL if CONFIG.COLORED_OUTPUT else ""
 
 
 def format_flask_record(record):
@@ -58,7 +58,7 @@ def format_flask_record(record):
         verb = m_addr.group(1)
         route = m_addr.group(2)
 
-        if route.startswith(settings.API_PREFIX):
+        if route.startswith(CONFIG.API_PREFIX):
             api_web = "[API]"
             api_color = COLORS["MAGENTA"]
         else:

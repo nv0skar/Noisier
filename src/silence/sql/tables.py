@@ -1,8 +1,8 @@
-from ..db.dal import query
+from silence.db.dal import query
 
-from ..logging.default_logger import logger
+from silence.logging.default_logger import logger
 
-from ..settings import settings
+from silence.__main__ import CONFIG
 
 # Caches the columns of a table, to avoid repetitive queries
 global TABLE_COLUMNS
@@ -52,7 +52,7 @@ def get_primary_key_views(view_name):
 
     primary_keys = []
     view_columns = query(
-        f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{settings.DB_CONN['database']}' AND TABLE_NAME = '{view_name}'"
+        f"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{CONFIG.DB_CONN['database']}' AND TABLE_NAME = '{view_name}'"
     )
     for v in view_columns:
         if v["COLUMN_NAME"] in all_primary_keys:
@@ -63,7 +63,7 @@ def get_primary_key_views(view_name):
 
 def is_auto_increment(table_name, column_name):
     auto = query(
-        f"SELECT EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{settings.DB_CONN['database']}' AND TABLE_NAME = '{table_name}' AND COLUMN_NAME = '{column_name}'"
+        f"SELECT EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{CONFIG.DB_CONN['database']}' AND TABLE_NAME = '{table_name}' AND COLUMN_NAME = '{column_name}'"
     )
     res = auto[0]["EXTRA"] == "auto_increment"
     return res

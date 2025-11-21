@@ -1,11 +1,11 @@
-from ...settings import settings
+from silence.__main__ import CONFIG
 
 
 def handle(args):
-    from ...server.endpoint_creator import create_api
+    from silence.server.endpoint_creator import create_api
 
-    if settings.ENABLE_ENDPOINT_AUTO_GENERATION:
-        print("Creating the default endpoints and generating the API files...")
+    if CONFIG.ENABLE_ENDPOINT_AUTO_GENERATION:
+        print("Creating the default endpoints and generating the API filessilence.")
         create_api()
         print("Done!")
     else:

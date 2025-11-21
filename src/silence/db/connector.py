@@ -1,6 +1,6 @@
 import pymysql
 
-from ..settings import settings
+from silence.__main__ import CONFIG
 
 #
 # The connector fetches the relevant configuration parameters
@@ -10,9 +10,9 @@ from ..settings import settings
 
 def get_conn():
     return pymysql.connect(
-        host=settings.DB_CONN["host"],
-        port=settings.DB_CONN["port"],
-        user=settings.DB_CONN["username"],
-        password=settings.DB_CONN["password"],
-        database=settings.DB_CONN["database"],
+        host=CONFIG.DB_CONN["host"],
+        port=CONFIG.DB_CONN["port"],
+        user=CONFIG.DB_CONN["username"],
+        password=CONFIG.DB_CONN["password"],
+        database=CONFIG.DB_CONN["database"],
     )

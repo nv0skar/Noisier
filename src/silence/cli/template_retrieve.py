@@ -3,7 +3,7 @@ import zipfile
 import requests
 import sys
 
-from ..logging.default_logger import logger
+from silence.logging.default_logger import logger
 
 from os import listdir, remove, getcwd
 from os.path import join, isfile, isdir, basename
@@ -25,7 +25,7 @@ def download_from_github(project_name, repo_url):
         sys.exit(1)
 
     # Remove the trailing .git or slash if they exist
-    # We could use .removesuffix, but it was added in 3.9... maybe if we bump
+    # We could use .removesuffix, but it was added in 3.9silence. maybe if we bump
     # the required Python version some time in the future
     suffixes = (".git", "/")
     for suffix in suffixes:

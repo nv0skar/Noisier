@@ -10,6 +10,8 @@ maintainers = [{ name = "Miguel Bermudo", email = "mbermudo@us.es" }]
 license = "MIT"
 dependencies = [
     "colorama == 0.4.4",
+    "msgspec @ git+https://github.com/jcrist/msgspec",
+    "tomli_w == 1.2.0",
     "cryptography == 36.0.2",
     "Flask-Cors==3.0.10",
     "Flask==2.0.3",
@@ -26,8 +28,7 @@ requires = ["hatchling>=1.18.0"]
 build-backend = "hatchling.build"
 
 [project.scripts]
-silence = "silence.cli.manager:run_from_command_line"
-
+silence = "silence.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/silence"]
@@ -52,3 +53,6 @@ format = ["black .", "ruff check --fix ."]
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.ruff.lint.isort]
+lines-after-imports = 1

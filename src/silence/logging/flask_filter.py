@@ -1,4 +1,4 @@
-from ..logging import utils
+from silence.logging import utils
 
 import logging
 

@@ -1,14 +1,14 @@
-from ...logging.default_logger import logger
-from ...settings import settings
-from ...utils.check_update import check_for_new_version
-from ...__version__ import __version__
+from silence.logging.default_logger import logger
+from silence.__main__ import CONFIG
+from silence.utils.check_update import check_for_new_version
+from silence.__version__ import __version__
 
 
 def handle(args):
-    from ...server import manager as server_manager
+    from silence.server import manager as server_manager
 
     logger.info("Silence v%s", __version__)
-    logger.debug("Current settings:\n%s", str(settings))
+    logger.debug("Current settings:\n%s", str(CONFIG))
 
     new_ver = check_for_new_version()
     if new_ver:

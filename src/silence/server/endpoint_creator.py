@@ -1,12 +1,12 @@
-from ..sql.tables import (
+from silence.sql.tables import (
     get_tables,
     get_views,
     get_primary_key,
     is_auto_increment,
     get_primary_key_views,
 )
-from ..logging.default_logger import logger
-from ..settings import settings
+from silence.logging.default_logger import logger
+from silence.__main__ import CONFIG
 
 from os import listdir, getcwd, path, mkdir, makedirs
 from shutil import rmtree
@@ -118,14 +118,14 @@ def create_entity_endpoints(existing_routes_method_pairs):
 
     # Finally, generate the .js API module for the allowed auth operations
     auth_endpoints = {}
-    if settings.ENABLE_LOGIN:
+    if CONFIG.ENABLE_LOGIN:
         auth_endpoints["login"] = {
             "route": "/login",
             "method": "POST",
             "description": "Logs in using an identifier and password",
         }
 
-    if settings.ENABLE_REGISTER:
+    if CONFIG.ENABLE_REGISTER:
         auth_endpoints["register"] = {
             "route": "/register",
             "method": "POST",

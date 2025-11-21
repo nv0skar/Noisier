@@ -1,15 +1,15 @@
 import requests
 
-from ..settings import settings
-from ..logging.default_logger import logger
-from ..__version__ import __version__
+from silence.__main__ import CONFIG
+from silence.logging.default_logger import logger
+from silence.__version__ import __version__
 
 
 def check_for_new_version():
-    if not settings.CHECK_FOR_UPDATES:
+    if not CONFIG.CHECK_FOR_UPDATES:
         return False
 
-    logger.debug("Checking for new updates...")
+    logger.debug("Checking for new updatessilence.")
 
     try:
         data = requests.get("https://pypi.org/pypi/Silence/json", timeout=3).json()
