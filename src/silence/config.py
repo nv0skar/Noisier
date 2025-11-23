@@ -1,10 +1,10 @@
 # Silence
 # Copyright (C) 2025 Oscar Alvarez Gonzalez
 
+from typing import Tuple, Literal, List
+
 import os
 import sys
-
-from typing import Tuple, Literal
 
 from msgspec import Struct, field, toml, MsgspecError
 
@@ -61,6 +61,7 @@ class DbConn(Base, frozen=True, gc=False):
     username: str = field(default="default_username")
     password: str = field(default="default_password")
     db: str = field(default="default_db")
+    bootstrap_scripts: List[str] = field(default_factory=list)
 
 
 class Config(Base, frozen=True, gc=False):

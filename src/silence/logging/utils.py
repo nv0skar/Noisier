@@ -5,9 +5,7 @@ import colorama
 from colorama import Fore, Style
 
 from datetime import datetime
-import logging
 import re
-
 
 #
 # Auxiliary operations for cli data logging.
@@ -23,14 +21,16 @@ RE_LOG = re.compile(r'(.*) - - \[.*\] "%s" %s %s')
 RE_REQ_DATA = re.compile(r"(\w+) (/.*) HTTP.*")
 
 COLORS = {
-    "GREEN": Style.BRIGHT + Fore.GREEN if CONFIG.COLORED_OUTPUT else "",
-    "MAGENTA": Style.BRIGHT + Fore.MAGENTA if CONFIG.COLORED_OUTPUT else "",
-    "CYAN": Style.BRIGHT + Fore.CYAN if CONFIG.COLORED_OUTPUT else "",
-    "YELLOW": Style.BRIGHT + Fore.YELLOW if CONFIG.COLORED_OUTPUT else "",
-    "RED": Style.BRIGHT + Fore.RED if CONFIG.COLORED_OUTPUT else "",
-    "WHITE": Style.BRIGHT + Fore.WHITE if CONFIG.COLORED_OUTPUT else "",
+    "GREEN": Style.BRIGHT + Fore.GREEN if CONFIG.get().general.colored_output else "",
+    "MAGENTA": Style.BRIGHT + Fore.MAGENTA
+    if CONFIG.get().general.colored_output
+    else "",
+    "CYAN": Style.BRIGHT + Fore.CYAN if CONFIG.get().general.colored_output else "",
+    "YELLOW": Style.BRIGHT + Fore.YELLOW if CONFIG.get().general.colored_output else "",
+    "RED": Style.BRIGHT + Fore.RED if CONFIG.get().general.colored_output else "",
+    "WHITE": Style.BRIGHT + Fore.WHITE if CONFIG.get().general.colored_output else "",
 }
-RESET = Style.RESET_ALL if CONFIG.COLORED_OUTPUT else ""
+RESET = Style.RESET_ALL if CONFIG.get().general.colored_output else ""
 
 
 def format_flask_record(record):
@@ -55,10 +55,10 @@ def format_flask_record(record):
         # but we must remove color codes first before parsing
         addr_and_route = RE_ANSI.sub("", args[0])
         m_addr = RE_REQ_DATA.match(addr_and_route)
-        verb = m_addr.group(1)
-        route = m_addr.group(2)
+        verb = m_addr.group(1)  # type: ignore
+        route = m_addr.group(2)  # type: ignore
 
-        if route.startswith(CONFIG.API_PREFIX):
+        if route.startswith(CONFIG.get().server.api_prefix):
             api_web = "[API]"
             api_color = COLORS["MAGENTA"]
         else:
@@ -97,7 +97,7 @@ def format_custom_record(kind: str, color: str, msg: str):
 
     try:
         code_color = COLORS[color.upper()]
-    except:
+    except Exception:
         logger.warn(
             "Silence chose a non-existing color for cli message, defaulted to white."
         )
@@ -105,6 +105,6 @@ def format_custom_record(kind: str, color: str, msg: str):
 
     date = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
-    formatted_msg = f"{date} | {api_color}{api_web}{RESET} {code_color}{msg}{RESET}"
+    formatted_msg = f"{date} | {api_color}{api_web}{RESET} {code_color}{msg}{RESET}"  # type: ignore
 
     return formatted_msg

@@ -92,12 +92,10 @@ def main():
 
     # Initialize config.toml
     match command:
-        case "run" | "list-templates":
+        case "new" | "list-templates":
             pass
         case _:
             CONFIG.load_config()
-
-    print(CONFIG.app.auth.max_token_age)
 
     def _get_handler() -> Callable[[Any], None]:
         match command:

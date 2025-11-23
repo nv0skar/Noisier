@@ -3,7 +3,6 @@ from silence.sql.tables import (
     get_views,
     get_primary_key,
     is_auto_increment,
-    get_primary_key_views,
 )
 from silence.logging.default_logger import logger
 from silence.__main__ import CONFIG
@@ -24,17 +23,15 @@ def create_api():
     create_entity_endpoints(existing_routes_method_pairs)
 
 
-#############################################################################
-# Get the entities from the database and the existing user endpoints and    #
+# Get the entities from the database and the existing user endpoints and
 # create CRUD endpoint files (json) for the remaining ones.                 #
-#############################################################################
 def create_entity_endpoints(existing_routes_method_pairs):
     """
     Reset the "auto" folder for endpoints and iterate over the databases tables and views,
     generating the corresponding endpoints for each of them.
     """
     # Remove the folder if it exists and create it again
-    auto_dir = getcwd() + "/endpoints/auto"
+    auto_dir = getcwd() + "/endpoints/_auto"
 
     try:
         rmtree(auto_dir)
@@ -49,6 +46,8 @@ def create_entity_endpoints(existing_routes_method_pairs):
     # adding a "is_table" flag to distinguish them.
     tables_data = [(td, True) for td in get_tables().items()]
     views_data = [(vd, False) for vd in get_views().items()]
+    print(tables_data)
+    print(views_data)
     all_data = tables_data + views_data
 
     for (table_name, columns), is_table in all_data:
@@ -59,6 +58,7 @@ def create_entity_endpoints(existing_routes_method_pairs):
         endpoints_to_json = {}
         logger.info("Generating endpoints and JS API files for %s", table_name)
 
+        (route_one, pk) = ("", "")
         if is_table:
             pk = get_primary_key(table_name)
             route_one = f"/{table_name.lower()}/${pk}"
@@ -118,14 +118,14 @@ def create_entity_endpoints(existing_routes_method_pairs):
 
     # Finally, generate the .js API module for the allowed auth operations
     auth_endpoints = {}
-    if CONFIG.ENABLE_LOGIN:
+    if CONFIG.get().app.auth.enable:
         auth_endpoints["login"] = {
             "route": "/login",
             "method": "POST",
             "description": "Logs in using an identifier and password",
         }
 
-    if CONFIG.ENABLE_REGISTER:
+    if CONFIG.get().app.auth.allow_signup:
         auth_endpoints["register"] = {
             "route": "/register",
             "method": "POST",

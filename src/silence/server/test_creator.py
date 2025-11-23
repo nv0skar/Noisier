@@ -1,8 +1,9 @@
+from silence.__main__ import CONFIG
+from silence.sql.tables import get_tables, get_primary_key, get_table_fields
+from silence.logging.default_logger import logger
+
 from os import getcwd
-from sql.tables import get_tables, get_primary_key, get_table_cols
-from logging.default_logger import logger
-from settings import settings
-from shutil import rmtree
+from shutil import ExecError, rmtree
 from pathlib import Path
 
 # SILENCE CREATETEST OPERATIONS
@@ -29,7 +30,7 @@ def create_tests():
 
     # Test files creation
     tables = get_tables()
-    table_name_auth = settings.USER_AUTH_DATA["table"].lower()
+    table_name_auth = CONFIG.get().app.auth.user_auth_table.lower()
 
     for table in list(tables.items()):
         name = table[0].lower()
@@ -44,19 +45,19 @@ def create_tests():
             table[1].remove(
                 pk
             )  # The auth table will already have its primary key removed.
-        except:
+        except Exception:
             pass
 
         logger.info("Generating tests for %s", name)
         table_name = next(t for t in tables if t.lower() == name)
-        table_attributes = get_table_cols(table_name)
+        table_attributes = get_table_fields(table_name)
 
         TEST = f"""
 ### This is an auto-generated test suite, it needs to be completed with valid data.
 ### These are not all tests you need, more of them should be created to evaluate the functional
 ### requirements of your project. These tests only test the CRUD endpoints of the entity.
 ### Silence is a DEAL research team project, more info about us in https://deal.us.es
-@BASE = http://{settings.LISTEN_ADDRESS}:{settings.HTTP_PORT}{settings.API_PREFIX}
+@BASE = http://{CONFIG.get().server.listen_addr[0]}:{CONFIG.get().server.listen_addr[1]}{CONFIG.get().server.api_prefix}
 
 ### Auxiliary query
 ### Positive test
@@ -74,8 +75,8 @@ Content-Type: application/json
 {{ 
 """
         t_args = [
-            settings.USER_AUTH_DATA["identifier"],
-            settings.USER_AUTH_DATA["password"],
+            "user",
+            "password",
         ]
         TEST += add_table_args(t_args)
         TEST += f"""}}

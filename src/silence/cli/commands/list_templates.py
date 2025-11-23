@@ -7,7 +7,9 @@ from silence.logging.default_logger import logger
 
 
 def handle(args):
-    query_url = f"https://api.github.com/orgs/{CONFIG.GITHUB_TEMPLATES_OWNER}/repos"
+    query_url = (
+        f"https://api.github.com/orgs/{CONFIG.get().general.default_template[0]}/repos"
+    )
 
     try:
         repo_data = requests.get(query_url, timeout=10).json()
@@ -16,7 +18,7 @@ def handle(args):
         logger.error(
             "An error has occurred when querying GitHub's API to obtain the list of templates."
         )
-        if not CONFIG.DEBUG_ENABLED:
+        if not CONFIG.debug:
             logger.error("Add --debug to see the full stack trace.")
         sys.exit(1)
 
@@ -33,7 +35,11 @@ def handle(args):
     print("Available templates:")
     for tmpl in templates:
         name = tmpl["name"]
-        default = " (default)" if name == CONFIG.DEFAULT_TEMPLATE_NAME.lower() else ""
+        default = (
+            " (default)"
+            if name == CONFIG.get().general.default_template[1].lower()
+            else ""
+        )
         desc = f": {tmpl['desc']}" if tmpl["desc"] else ""
 
         print(f"    · {name}{default}{desc}")

@@ -29,3 +29,4 @@ host = ["127.0.0.1", 3306]
 username = "tu_mami"
 password = "default_password"
 db = "default_db"
+bootstrap_scripts = []

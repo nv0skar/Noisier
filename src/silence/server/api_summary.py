@@ -1,12 +1,10 @@
+from silence.__main__ import CONFIG
+from silence.logging.default_logger import logger
+
 import re
 
-from silence.logging.default_logger import logger
-from silence.__main__ import CONFIG
 
-
-###############################################################################
-# Utility class for printing the list of loaded endpoints
-###############################################################################
+# Prints the list of loaded endpoints
 class APISummary:
     def __init__(self):
         self.endpoints = []
@@ -33,9 +31,8 @@ class APISummary:
         unique_endpoints = list(unique_endpoints.items())
         unique_endpoints.sort(key=lambda x: x[0])
 
-        host = CONFIG.LISTEN_ADDRESS
-        port = CONFIG.HTTP_PORT
-        base = f"http://{host}:{port}"
+        (_host, _port) = CONFIG.get().server.listen_addr
+        addr = "http://{}:{}".format(_host, _port)
 
         logger.info("\nEndpoints loaded:")
 
@@ -47,7 +44,7 @@ class APISummary:
             # Replace $param with <param>
             route = re.sub(r"\$(\w+)", r"<\1>", route)
 
-            logger.info("    · %s%s (%s)", base, route, methods)
+            logger.info("    · %s%s (%s)", addr, route, methods)
 
         if unique_endpoints:
             # Add an empty line

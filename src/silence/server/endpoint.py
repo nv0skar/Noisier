@@ -53,7 +53,7 @@ def setup_endpoint(
         )
 
     # Construct the API route taking the prefix into account
-    route_prefix = CONFIG.API_PREFIX
+    route_prefix = CONFIG.get().server.api_prefix
     if route_prefix.endswith("/"):
         route_prefix = route_prefix[:-1]  # Drop the final /
     full_route = route_prefix + route
@@ -142,7 +142,7 @@ def setup_endpoint(
             for param in url_params:
                 body_params[param] = request_url_params_dict[param]
 
-            if CONFIG.DISPLAY_BODY_PARAMS_CLI:
+            if CONFIG.debug:
                 logger.info(
                     log_utils.format_custom_record(
                         "api", "yellow", f"PARAMS {body_params}"
@@ -197,28 +197,29 @@ def check_session(logged_user_data, allowed_roles):
     if logged_user_data is None:
         raise HTTPError(401, "Unauthorized")
 
+    # TODO: CHECK ROLES
     # Check if the user's role is allowed to access this endpoint
-    role_col_name = CONFIG.USER_AUTH_DATA.get("role", None)
+    # role_col_name = CONFIG.USER_AUTH_DATA.get("role", None)
 
-    if role_col_name:  # Only check the role if we know the role column
-        # Find the role of the user from the user data
-        user_role = next(
-            (
-                v
-                for k, v in logged_user_data.items()
-                if k.lower() == role_col_name.lower()
-            ),
-            None,
-        )
+    # if role_col_name:  # Only check the role if we know the role column
+    #     # Find the role of the user from the user data
+    #     user_role = next(
+    #         (
+    #             v
+    #             for k, v in logged_user_data.items()
+    #             if k.lower() == role_col_name.lower()
+    #         ),
+    #         None,
+    #     )
 
-        logger.debug(
-            "Allowed roles are %s and the user role is %s",
-            str(allowed_roles),
-            user_role,
-        )
+    #     logger.debug(
+    #         "Allowed roles are %s and the user role is %s",
+    #         str(allowed_roles),
+    #         user_role,
+    #     )
 
-        if user_role not in allowed_roles and "*" not in allowed_roles:
-            raise HTTPError(401, "Unauthorized")
+    #     if user_role not in allowed_roles and "*" not in allowed_roles:
+    #         raise HTTPError(401, "Unauthorized")
 
 
 # Return the user's ID if the user is logged in and has a PK, None otherwise
@@ -226,7 +227,7 @@ def get_current_user_id(logged_user_data):
     userID = None
 
     if logged_user_data is not None:
-        users_table = CONFIG.USER_AUTH_DATA["table"]
+        users_table = CONFIG.get().app.auth.user_auth_table
         pk = get_primary_key(users_table)
         userID = (
             logged_user_data[pk] if pk else None

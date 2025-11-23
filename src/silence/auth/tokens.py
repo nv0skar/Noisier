@@ -4,13 +4,12 @@ from itsdangerous.exc import BadSignature, SignatureExpired
 from silence.__main__ import CONFIG
 from silence.exceptions import TokenError
 from silence.logging.default_logger import logger
-from silence.utils.silence_json_encoder import SilenceJSONSerializer
 
 ###############################################################################
 # Token management: creation and checking
 ###############################################################################
 
-auth = Serializer("hello", serializer=SilenceJSONSerializer)
+auth = Serializer("hello")
 
 
 def create_token(data):
@@ -25,7 +24,7 @@ def check_token(token):
     contained inside the token if it is, otherwise raises a TokenError."""
     logger.debug("Checking received token %s[silence.]%s", token[:6], token[-6:])
     try:
-        user_data = auth.loads(token, max_age=CONFIG.app.auth.max_token_age)
+        user_data = auth.loads(token, max_age=CONFIG.get().app.auth.max_token_age)
         logger.debug("The token is correct")
         return user_data
     except SignatureExpired:

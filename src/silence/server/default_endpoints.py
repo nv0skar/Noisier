@@ -4,7 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from silence.auth.tokens import create_token
 from silence.db import dal
 from silence.sql.builder import get_login_query, get_register_user_query
-from silence.sql.tables import get_table_cols
+from silence.sql.tables import get_table_fields
 from silence.__main__ import CONFIG
 from silence.exceptions import HTTPError
 from silence.logging.default_logger import logger
@@ -51,16 +51,14 @@ def login():
     if PASSWORD_FIELD not in user:
         raise HTTPError(500, f"The user has no attribute '{PASSWORD_FIELD}'")
 
-    password_ok = (
-        CONFIG.ALLOW_CLEAR_PASSWORDS and user[PASSWORD_FIELD] == password
-    ) or check_password_hash(user[PASSWORD_FIELD], password)
+    password_ok = check_password_hash(user[PASSWORD_FIELD], password)
     if not password_ok:
         logger.debug("Incorrect password")
         raise HTTPError(400, "The user or the password are not correct")
 
     # If a column has been specified for the "is active" field, and the check
     # is enabled in the settings, check that the user has not been deactivated
-    if ACTIVE_FIELD is not None and CONFIG.CHECK_USER_IS_ACTIVE:
+    if ACTIVE_FIELD is not None:
         if not user[ACTIVE_FIELD]:
             logger.debug("The user is deactivated, login denied")
             raise HTTPError(401, "This user has been deactivated")
@@ -69,7 +67,7 @@ def login():
     # and return it with the logged user's info
     logger.debug("Login OK")
 
-    if CONFIG.DISPLAY_BODY_PARAMS_CLI:
+    if CONFIG.debug:
         logger.info(log_utils.format_custom_record("api", "yellow", f"PARAMS {form}"))
 
     token = create_token(user)
@@ -114,14 +112,10 @@ def register():
     user = dict(form)
     user[PASSWORD_FIELD] = generate_password_hash(password)
 
-    # Assign a default role to the user, if specified in the settings
-    if CONFIG.DEFAULT_ROLE_REGISTER:
-        user[ROLE_FIELD] = CONFIG.DEFAULT_ROLE_REGISTER
-
     # Assign a default active status, if the activity check is on and none has
     # been provided
-    if ACTIVE_FIELD and ACTIVE_FIELD not in user:
-        user[ACTIVE_FIELD] = CONFIG.DEFAULT_ACTIVE_STATUS
+    # if ACTIVE_FIELD and ACTIVE_FIELD not in user:
+    #     user[ACTIVE_FIELD] = CONFIG.DEFAULT_ACTIVE_STATUS
 
     # Try to insert it in the DB
     # Since the /register endpoint must adapt to any possible table,
@@ -139,7 +133,7 @@ def register():
     # and return it with the logged user's info
     logger.debug("Register OK")
 
-    if CONFIG.DISPLAY_BODY_PARAMS_CLI:
+    if CONFIG.debug:
         logger.info(log_utils.format_custom_record("api", "yellow", f"PARAMS {form}"))
 
     token = create_token(user)
@@ -155,7 +149,7 @@ def register():
 # Transforms the received dict of fields into a filtered one that shares
 # the same capitalization with the DB columns
 def filter_fields_db(data, table_name):
-    cols = get_table_cols(table_name)
+    cols = get_table_fields(table_name)
     res = {}
 
     for field, value in data.items():
@@ -169,7 +163,7 @@ def filter_fields_db(data, table_name):
 # Returns a given column name with the correct capitalization for its table
 # Raises a ValueError if it can't be found in the given table
 def col_correct_case(col_name, table_name):
-    cols = get_table_cols(table_name)
+    cols = get_table_fields(table_name)
 
     for col in cols:
         if col.lower() == col_name.lower():
@@ -181,22 +175,22 @@ def col_correct_case(col_name, table_name):
 # Returns the login table and fields as specified in the settings,
 # with the correct capitalization to avoid SQL errors
 def get_login_settings():
-    users_table = CONFIG.USER_AUTH_DATA["table"]
+    users_table = CONFIG.get().app.auth.user_auth_table
     identifier_field = col_correct_case(
-        CONFIG.USER_AUTH_DATA["identifier"], users_table
+        CONFIG.get().app.auth.user_auth_field, users_table
     )
-    password_field = col_correct_case(CONFIG.USER_AUTH_DATA["password"], users_table)
+    password_field = col_correct_case("password", users_table)
 
-    if "role" in CONFIG.USER_AUTH_DATA:
-        role_field = col_correct_case(CONFIG.USER_AUTH_DATA["role"], users_table)
-    else:
-        role_field = None
+    # if "role" in CONFIG.USER_AUTH_DATA:
+    #     role_field = col_correct_case(CONFIG.USER_AUTH_DATA["role"], users_table)
+    # else:
+    #     role_field = None
 
-    if "active_status" in CONFIG.USER_AUTH_DATA:
-        active_field = col_correct_case(
-            CONFIG.USER_AUTH_DATA["active_status"], users_table
-        )
-    else:
-        active_field = None
+    # if "active_status" in CONFIG.USER_AUTH_DATA:
+    #     active_field = col_correct_case(
+    #         CONFIG.USER_AUTH_DATA["active_status"], users_table
+    #     )
+    # else:
+    #     active_field = None
 
-    return users_table, identifier_field, password_field, role_field, active_field
+    return users_table, identifier_field, password_field, "", ""

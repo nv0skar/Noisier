@@ -13,10 +13,8 @@ from silence.logging.default_logger import logger
 # SILENCE RUN OPERATIONS
 
 
-###############################################################################
 # Look for .json files inside the project's "/endpoints" folder
 # and generate the endpoints for them.
-###############################################################################
 def load_user_endpoints():
     logger.debug("Looking for custom endpointssilence.")
 
@@ -60,17 +58,15 @@ def load_user_endpoints():
                 )
 
 
-###############################################################################
 # Register the Silence-provided endpoints
-###############################################################################
 def load_default_endpoints():
-    from server import default_endpoints
+    from silence.server import default_endpoints
 
-    route_prefix = CONFIG.API_PREFIX
+    route_prefix = CONFIG.get().server.api_prefix
     if route_prefix.endswith("/"):
         route_prefix = route_prefix[:-1]
 
-    if CONFIG.ENABLE_SUMMARY:
+    if CONFIG.get().general.display_endpoints_on_start:
         server_manager.API_SUMMARY.register_endpoint(
             {
                 "route": route_prefix,
@@ -82,7 +78,7 @@ def load_default_endpoints():
             route_prefix, "APItreeHELP", show_api_endpoints, methods=["GET"]
         )
 
-    if CONFIG.ENABLE_LOGIN:
+    if CONFIG.get().app.auth.enable:
         login_route = f"{route_prefix}/login"
         server_manager.API_SUMMARY.register_endpoint(
             {
@@ -95,7 +91,7 @@ def load_default_endpoints():
             login_route, "login", default_endpoints.login, methods=["POST"]
         )
 
-    if CONFIG.ENABLE_REGISTER:
+    if CONFIG.get().app.auth.allow_signup:
         register_route = f"{route_prefix}/register"
         server_manager.API_SUMMARY.register_endpoint(
             {

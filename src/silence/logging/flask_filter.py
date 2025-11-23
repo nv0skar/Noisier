@@ -17,5 +17,5 @@ class FlaskFilter(logging.Filter):
         # Pass it on to Silence's logger, which implements
         # blocking to prevent multiple lines from overlapping,
         # and filter it out from this one
-        logging.getLogger("silence").handle(record)
+        logging.getLogger("silence").handle(record)  # type: ignore
         return False

@@ -8,7 +8,6 @@ from silence.__main__ import CONFIG
 from silence.exceptions import HTTPError
 from silence.logging.default_logger import logger
 from silence.logging.flask_filter import FlaskFilter
-from silence.utils.silence_json_encoder import SilenceJSONEncoder
 from silence.server.api_summary import APISummary
 
 from os.path import join
@@ -21,17 +20,20 @@ import logging
 # configuring it and deploying the endpoints and web app.
 ###############################################################################
 
-static_folder = join(getcwd(), "web") if CONFIG.RUN_WEB else None
+static_folder = (
+    join(getcwd(), "static") if CONFIG.get().server.serve_static_files else None
+)
 APP = Flask(__name__, static_folder=static_folder)
-cors = CORS(APP, resources={f"{CONFIG.API_PREFIX}*": {"origins": "*"}})
+cors = CORS(APP, resources={f"{CONFIG.get().server.api_prefix}*": {"origins": "*"}})
 API_SUMMARY = APISummary()
 
 
 def setup():
     # Configures the web server
-    APP.secret_key = CONFIG.SECRET_KEY
+    # TODO: DESTROY THIS KEY
+    APP.secret_key = ""
     APP.config["SESSION_TYPE"] = "filesystem"
-    APP.config["SEND_FILE_MAX_AGE_DEFAULT"] = CONFIG.HTTP_CACHE_TIME
+    APP.config["SEND_FILE_MAX_AGE_DEFAULT"] = CONFIG.get().server.http_cache_time
 
     # Mute Flask's startup messages
     def noop(*args, **kwargs):
@@ -44,12 +46,7 @@ def setup():
     logging.getLogger("werkzeug").addFilter(FlaskFilter())
 
     # Override the default JSON encoder so that it works with the Decimal type
-    APP.json_encoder = SilenceJSONEncoder
-
-    # Manually set up the MIME type for .js files
-    # This patches a known issue on Windows, where the MIME type for JS files
-    # is sometimes incorrectly set to text/plain in the registry
-    mimetypes.add_type("application/javascript", ".js", strict=True)
+    # TODO: CHECK THIS DECIMAL MADNESS
 
     # Set up the error handle for our custom exception type
     @APP.errorhandler(HTTPError)
@@ -74,7 +71,7 @@ def setup():
         # We're facing an uncontrolled server exception
         # Only show the full stack trace in debug mode
         # Otherwise, just show the exception message
-        if CONFIG.DEBUG_ENABLED:
+        if CONFIG.debug:
             logger.exception(exc)
         else:
             error_msg = str(exc)
@@ -86,25 +83,16 @@ def setup():
         err = HTTPError(500, msg, exc_type)
         return handle_HTTPError(err)
 
-    # Check if clear text passwords can be used for login, and show a warning
-    # if that is the case
-    if CONFIG.ALLOW_CLEAR_PASSWORDS:
-        logger.warning(
-            "This project allows clear text passwords in the DB to be used for login\n"
-            + "(ALLOW_CLEAR_PASSWORDS = True)\n"
-            + "This is NOT RECOMMENDED except for testing purposes."
-        )
-
     # Load the user-provided API endpoints and the default ones
-    if CONFIG.RUN_API:
+    if CONFIG.get().server.serve_api:
         load_default_endpoints()
         load_user_endpoints()
 
-        if CONFIG.SHOW_ENDPOINT_LIST:
+        if CONFIG.get().general.display_endpoints_on_start:
             API_SUMMARY.print_endpoints()
 
     # Load the web static files
-    if CONFIG.RUN_WEB:
+    if CONFIG.get().server.serve_static_files:
         logger.debug("Setting up web server")
 
         @APP.route("/")
@@ -118,8 +106,8 @@ def setup():
 
 def run():
     APP.run(
-        host=CONFIG.LISTEN_ADDRESS,
-        port=CONFIG.HTTP_PORT,
-        debug=CONFIG.DEBUG_ENABLED,
+        host=CONFIG.get().server.listen_addr[0],
+        port=CONFIG.get().server.listen_addr[1],
+        debug=CONFIG.debug,
         threaded=True,
     )

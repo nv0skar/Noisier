@@ -7,7 +7,7 @@ def handle(args):
 
     if all(not args[k] for k in ("blank", "url", "template")):
         # No extra args provided, use the default template
-        args["template"] = CONFIG.general.default_template[1]
+        args["template"] = CONFIG.get().general.default_template[1]
     elif args["blank"]:
         args["template"] = "blank"
 
@@ -15,7 +15,7 @@ def handle(args):
     project_name = args["name"]
 
     if template:
-        repo_url = f"https://github.com/{CONFIG.general.default_template[0]}/silence-template-v2-{CONFIG.general.default_template[1]}"
+        repo_url = f"https://github.com/{CONFIG.get().general.default_template[0]}/silence-template-v2-{CONFIG.get().general.default_template[1]}"
     else:
         # We have to download a repo from a URL
         repo_url = args["url"]

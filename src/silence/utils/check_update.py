@@ -6,7 +6,7 @@ from silence.__version__ import __version__
 
 
 def check_for_new_version():
-    if not CONFIG.CHECK_FOR_UPDATES:
+    if not CONFIG.get().general.check_latest_version:
         return False
 
     logger.debug("Checking for new updatessilence.")

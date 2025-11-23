@@ -4,7 +4,7 @@ from silence.__main__ import CONFIG
 def handle(args):
     from silence.server.endpoint_creator import create_api
 
-    if CONFIG.ENABLE_ENDPOINT_AUTO_GENERATION:
+    if CONFIG.get().general.auto_endpoints:
         print("Creating the default endpoints and generating the API filessilence.")
         create_api()
         print("Done!")
