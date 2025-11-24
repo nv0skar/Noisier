@@ -30,6 +30,9 @@ API_SUMMARY = APISummary()
 
 def setup():
     # Configures the web server
+
+    # TODO: TRANSITION FROM FLASK TO GRANIAN
+
     # TODO: DESTROY THIS KEY
     APP.secret_key = ""
     APP.config["SESSION_TYPE"] = "filesystem"

@@ -5,8 +5,6 @@ from silence.config import Config, _load_default_config, _load_config
 
 from typing import Any
 
-import sys
-
 
 class LazyGlobals:
     __slots__ = ("debug", "_config")
@@ -27,14 +25,14 @@ class LazyGlobals:
 
     def toggle_debug(self):
         if self.debug:
-            print("Cannot toggle off debug at runtime!")
-            sys.exit(1)
+            raise Exception("Cannot disable debug on runtime.")
         self.debug = True
 
     def load_config(self):
         if self._config != _load_default_config():
-            print("Cannot set configuration at runtime!")
-            sys.exit(1)
+            raise Exception(
+                "Already loaded config; config cannot be replaced on runtime."
+            )
         self._config = _load_config()
 
     def get(self):

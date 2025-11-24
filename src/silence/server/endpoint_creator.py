@@ -1,4 +1,4 @@
-from silence.sql.tables import DATABASE_SCHEMA, DatabaseSchema, TableField
+from silence.sql.tables import DATABASE_SCHEMA, TableField
 from silence.logging.default_logger import logger
 from silence.__main__ import CONFIG
 

@@ -19,10 +19,9 @@ RE_SECRET_KEY = re.compile(r"""SECRET_KEY\s*=\s*['"]([a-zA-Z0-9-\_=\/+]+)['"]"""
 def download_from_github(project_name, repo_url):
     # Check that the current directory does not contain a folder with the same name
     if isdir(project_name):
-        logger.error(
+        raise Exception(
             "A folder named '%s' already exists in the current directory.", project_name
         )
-        sys.exit(1)
 
     # Remove the trailing .git or slash if they exist
     # We could use .removesuffix, but it was added in 3.9silence. maybe if we bump
@@ -35,17 +34,15 @@ def download_from_github(project_name, repo_url):
     # Check that the repo URL is acceptable
     m = RE_REPO_URL.match(repo_url.lower())
     if not m:
-        logger.error("Invalid repo URL, please check your spelling and try again.")
-        sys.exit(1)
+        raise Exception("Invalid repo URL, please check your spelling and try again.")
 
     host, username, repo_name = m.groups()
 
     # Check that the host is supported
     if host not in ("github.com", "github.eii.us.es"):
-        logger.error(
+        raise Exception(
             "Only repos hosted in github.com or github.eii.us.es are supported."
         )
-        sys.exit(1)
 
     # Download it (this takes care of querying the relevant API to find out
     # how the default branch is called, and exiting if the repo does not exist)
@@ -110,8 +107,7 @@ def git_clone(host, username, repo_name, clone_dir):
 
     api_response = requests.get(api_url)
     if api_response.status_code == 404:
-        logger.error("Repo not found")
-        sys.exit(1)
+        raise Exception("Repo not found")
 
     branch = api_response.json().get("default_branch", "master")
     git_url = f"https://{host}/{username}/{repo_name}"

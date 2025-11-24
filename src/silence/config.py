@@ -4,7 +4,6 @@
 from typing import Tuple, Literal, List
 
 import os
-import sys
 
 from msgspec import Struct, field, toml, MsgspecError
 
@@ -79,19 +78,22 @@ def _load_config() -> Config:
     except Exception as e:
         match e:
             case FileNotFoundError() as e:
-                print(
+                raise ConfigError(
                     "Cannot find the config.toml file at {}/{}! "
                     "Check whether you're running Silence from the project's root folder. "
                     "{}".format(os.getcwd(), _CONFIG_FILE_PATH, e)
                 )
             case MsgspecError() as e:
-                print(
+                raise ConfigError(
                     "There was an error while trying to serialize the config file. "
                     "Ensure that it is correcly formatted. "
                     "{}".format(e)
                 )
-        sys.exit(1)
 
 
 def _load_default_config() -> Config:
     return Config()
+
+
+class ConfigError(Exception):
+    pass

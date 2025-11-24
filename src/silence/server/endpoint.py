@@ -295,22 +295,20 @@ def check_method(sql, verb, endpoint):
             )
     else:
         # What has the user put here?
-        logger.error(
+        raise Exception(
             f"The SQL query '{sql}' in the endpoint {endpoint} is not supported,"
             + " please use only SELECT/INSERT/UPDATE/DELETE."
         )
-        sys.exit(1)
 
 
 def check_auth_roles(auth_required, allowed_roles, method, route):
     # Raise an error if allowed_roles is not a list
     if not isinstance(allowed_roles, list):
-        logger.error(
+        raise Exception(
             f"The value '{allowed_roles}' for the allowed_roles parameter in "
             + f"endpoint {method.upper()} {route} is not allowed, it must be a "
             + "list of allowed roles."
         )
-        sys.exit(1)
 
     # Warn if the user has specified some roles but auth_required is false,
     # since it will result in all users having access
@@ -353,9 +351,8 @@ def check_params_match(sql_params, user_params, route):
 
     if diff:
         params_str = ", ".join(f"${param}" for param in diff)
-        logger.error(
+        raise Exception(
             f"Error creating endpoint {route}: the parameters "
             + f"{params_str} are expected by the SQL query but they are not provided in the URL "
             + "or the request body."
         )
-        sys.exit(1)

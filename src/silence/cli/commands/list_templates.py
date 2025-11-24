@@ -19,8 +19,7 @@ def handle(args):
             "An error has occurred when querying GitHub's API to obtain the list of templates."
         )
         if not CONFIG.debug:
-            logger.error("Add --debug to see the full stack trace.")
-        sys.exit(1)
+            raise Exception("Add --debug to see the full stack trace.")
 
     templates = []
     for repo in repo_data:

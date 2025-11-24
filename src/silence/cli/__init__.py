@@ -15,6 +15,7 @@ from typing import Any, Callable
 
 import argparse
 import sys
+import sys
 import logging
 
 
@@ -90,13 +91,6 @@ def main():
 
     command = args.command.lower()
 
-    # Initialize config.toml
-    match command:
-        case "new" | "list-templates":
-            pass
-        case _:
-            CONFIG.load_config()
-
     def _get_handler() -> Callable[[Any], None]:
         match command:
             case "run":
@@ -116,4 +110,14 @@ def main():
             case _:
                 raise ValueError("Bad command!")
 
-    _get_handler()(args)
+    try:
+        # Initialize config.toml
+        match command:
+            case "new" | "list-templates":
+                pass
+            case _:
+                CONFIG.load_config()
+        _get_handler()(args)
+    except Exception as e:
+        logger.error("A fatal error occurred: {}".format(e))
+        sys.exit(1)
