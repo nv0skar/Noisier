@@ -16,7 +16,7 @@ from silence.logging.default_logger import logger
 # Look for .json files inside the project's "/endpoints" folder
 # and generate the endpoints for them.
 def load_user_endpoints():
-    logger.debug("Looking for custom endpointssilence.")
+    logger.debug("Looking for custom endpoints.")
 
     # Load every .json file inside the endpoints/ or api/ folders
     curr_dir = getcwd()
@@ -25,7 +25,7 @@ def load_user_endpoints():
     if not path.isdir(endpoints_dir):
         mkdir(endpoints_dir)
 
-    auto_dir = endpoints_dir + "/auto"
+    auto_dir = endpoints_dir + "/_auto"
 
     endpoint_paths_json_user = [
         endpoints_dir + f"/{f}" for f in listdir(endpoints_dir) if f.endswith(".json")

@@ -1,20 +1,18 @@
-from flask import jsonify, request
-from werkzeug.security import check_password_hash, generate_password_hash
-
 from silence.auth.tokens import create_token
 from silence.db import dal
 from silence.sql.builder import get_login_query, get_register_user_query
-from silence.sql.tables import get_table_fields
 from silence.__main__ import CONFIG
 from silence.exceptions import HTTPError
 from silence.logging.default_logger import logger
 from silence.logging import utils as log_utils
 
+from flask import jsonify, request
+from werkzeug.security import check_password_hash, generate_password_hash
 
-###############################################################################
+from silence.sql.tables import DATABASE_SCHEMA
+
 # Defines the default endpoints provided by Silence,
 # mainly /login and /register
-###############################################################################
 
 
 def login():
@@ -149,13 +147,14 @@ def register():
 # Transforms the received dict of fields into a filtered one that shares
 # the same capitalization with the DB columns
 def filter_fields_db(data, table_name):
-    cols = get_table_fields(table_name)
+    cols = DATABASE_SCHEMA.get_table(table_name)
+    assert cols is not None
     res = {}
 
     for field, value in data.items():
-        for col_name in cols:
-            if field.lower() == col_name.lower():
-                res[col_name] = value
+        for col in cols.fields:
+            if field.casefold() == col.name.casefold():
+                res[col.name] = value
 
     return res
 
@@ -163,10 +162,11 @@ def filter_fields_db(data, table_name):
 # Returns a given column name with the correct capitalization for its table
 # Raises a ValueError if it can't be found in the given table
 def col_correct_case(col_name, table_name):
-    cols = get_table_fields(table_name)
+    cols = DATABASE_SCHEMA.get_table(table_name)
+    assert cols is not None
 
-    for col in cols:
-        if col.lower() == col_name.lower():
+    for col in cols.fields:
+        if col.name.casefold() == col_name.casefold():
             return col
 
     raise ValueError(f"The column {col_name} could not be found in table {table_name}")

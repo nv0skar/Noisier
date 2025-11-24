@@ -1,4 +1,3 @@
-from silence.__main__ import CONFIG
 from silence.db.dal import query
 from silence.logging.default_logger import logger
 
@@ -7,19 +6,19 @@ from typing import List, Optional, Tuple
 from msgspec import Struct, field
 
 
-class TableField(Struct):
+class TableField(Struct, frozen=True, gc=False):
     name: str
     auto_increment: Optional[bool]
 
 
-class TableSchema(Struct):
+class TableSchema(Struct, frozen=True, gc=False):
     name: str
     fields: List[TableField]
     primary_key_field: str
     is_view: bool
 
 
-class DatabaseSchema(Struct):
+class DatabaseSchema(Struct, gc=False):
     tables: List[TableSchema] = field(default_factory=list)
 
     @staticmethod
@@ -28,7 +27,22 @@ class DatabaseSchema(Struct):
         db_schema.load_tables()
         return db_schema
 
+    """
+    This method is only valid when the 'Self.table' field hasn't been
+    modified after it's initial load
+    """
+
+    def get_table(self, table_name: str) -> Optional[TableSchema]:
+        return next(
+            (table for table in DATABASE_SCHEMA.tables if table.name == table_name),
+            None,
+        )
+
     def load_tables(self):
+        if len(self.tables) != 0:
+            raise Exception(
+                "Cannot overwrite alrady loaded database's schema on runtime!"
+            )
         res = query(q="SHOW FULL TABLES;")
         for table_data in res:
             (table_name, table_type) = [x for x in table_data.values()]
@@ -55,60 +69,4 @@ class DatabaseSchema(Struct):
         return (primary_key_field, fields)
 
 
-# Caches the columns of a table, to avoid repetitive queries
-global TABLE_COLUMNS
-TABLE_COLUMNS = {}
-
-
-def get_tables():
-    res = query(q="SHOW FULL TABLES WHERE table_type = 'BASE TABLE';")
-    tables = {}
-    for table_data in res:
-        # Grab the value that is not "BASE TABLE", which will be the name of the table
-        table_name = next(x for x in table_data.values() if x != "BASE TABLE")
-        tables[table_name] = get_table_fields(table_name)
-
-    logger.debug("Tables in database: %s", str(tables))
-    return tables
-
-
-def get_views():
-    res = query(q="SHOW FULL TABLES WHERE table_type = 'VIEW';")
-    views = {}
-    for view_data in res:
-        # Grab the value that is not "VIEW", which will be the name of the view
-        view_name = next(x for x in view_data.values() if x != "VIEW")
-        views[view_name] = get_table_fields(view_name)
-
-    logger.debug("Views in database: %s", str(views))
-    return views
-
-
-def get_primary_key(table_name):
-    t_pure = next(t for t in get_tables() if t.lower() == table_name.lower())
-    primary = query(f"SHOW KEYS FROM {t_pure} WHERE Key_name = 'PRIMARY'")
-
-    if primary:
-        return primary[0]["Column_name"]
-    else:
-        return None
-
-
-def is_auto_increment(table_name, column_name):
-    auto = query(
-        f"SELECT EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{CONFIG.get().db_conn.db}' AND TABLE_NAME = '{table_name}' AND COLUMN_NAME = '{column_name}'"
-    )
-    res = auto[0]["EXTRA"] == "auto_increment"
-    return res
-
-
-# Returns the list of names for the columns of a table, storing it
-# after the first query for a given table
-def get_table_fields(table_name) -> TableField:
-    global TABLE_COLUMNS
-
-    if table_name not in TABLE_COLUMNS:
-        cols = query(f"SHOW COLUMNS FROM {table_name}")
-        col_names = [col["Field"] for col in cols]
-        TABLE_COLUMNS[table_name] = col_names
-    return TABLE_COLUMNS[table_name]
+DATABASE_SCHEMA = DatabaseSchema()

@@ -1,20 +1,23 @@
-import sys
-import re
-
-from flask import jsonify, request
-
 from silence.db import dal
 from silence import sql as SQL
 from silence.sql import get_sql_op
 from silence.__main__ import CONFIG
+from silence.sql.tables import DATABASE_SCHEMA
 from silence.utils.min_type import Min
 from silence.auth.tokens import check_token
-from silence.sql.tables import get_primary_key
 from silence.logging.default_logger import logger
 from silence.logging import utils as log_utils
 from silence.sql.converter import silence_to_mysql
 from silence.server import manager as server_manager
 from silence.exceptions import HTTPError, TokenError
+
+from typing import Optional
+
+import sys
+import re
+
+from flask import jsonify, request
+
 
 OP_VERBS = {
     SQL.SELECT: "get",
@@ -223,15 +226,19 @@ def check_session(logged_user_data, allowed_roles):
 
 
 # Return the user's ID if the user is logged in and has a PK, None otherwise
-def get_current_user_id(logged_user_data):
+def get_current_user_id(logged_user_data) -> Optional[int]:
     userID = None
 
     if logged_user_data is not None:
         users_table = CONFIG.get().app.auth.user_auth_table
-        pk = get_primary_key(users_table)
-        userID = (
-            logged_user_data[pk] if pk else None
-        )  # Returns None if the table has no primary key
+        match DATABASE_SCHEMA.get_table(users_table):
+            case table if table is not None:
+                pk = table.primary_key_field
+                userID = (
+                    logged_user_data[pk] if pk else None
+                )  # Returns None if the table has no primary key
+            case _:
+                pass
 
     return userID
 
