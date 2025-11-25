@@ -1,15 +1,15 @@
 from silence.logging.default_logger import logger
 from silence.config import ConfigError
 from silence.__main__ import CONFIG
+from silence.server import endpoint_parser, manager as server_manager
+from silence.server.endpoint_setup import ENDPOINTS
 from silence.utils.check_update import check_for_new_version
 from silence.__version__ import __version__
 
 
 def handle(args):
-    from silence.server import manager as server_manager
-
     logger.info("Silence v%s", __version__)
-    logger.debug("Current settings:\n%s", str(CONFIG))
+    logger.debug("Current settings:\n%s", CONFIG.get())
 
     new_ver = check_for_new_version()
     if new_ver:
@@ -36,5 +36,6 @@ def handle(args):
             "is disabled."
         )
 
+    endpoint_parser.create_api()
     server_manager.setup()
     server_manager.run()

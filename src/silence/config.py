@@ -33,7 +33,7 @@ class Server(Base, frozen=True, gc=False):
     api_prefix: str = field(default="/api")
     serve_api: bool = field(default=True)
     serve_static_files: bool = field(default=True)
-    summary_endpoint: bool = field(default=False)
+    summary_endpoint: bool = field(default=True)
 
 
 """By default, passwords, roles (e.g. admin or whether the user is active) and tokens will be stored in their own tables"""
@@ -89,6 +89,8 @@ def _load_config() -> Config:
                     "Ensure that it is correcly formatted. "
                     "{}".format(e)
                 )
+            case _:
+                raise ConfigError("Unknown error while parsing config.toml")
 
 
 def _load_default_config() -> Config:

@@ -15,7 +15,6 @@ from typing import Any, Callable
 
 import argparse
 import sys
-import sys
 import logging
 
 
@@ -34,11 +33,10 @@ def main():
         "-v", "--version", action="version", version=f"Silence v{__version__}"
     )
 
+    parser.add_argument("--debug", action="store_true", help="Enables the debug mode")
+
     parser_list = subparsers.add_parser(
         "list-templates", help="Lists the available project templates"
-    )
-    parser_list.add_argument(
-        "--debug", action="store_true", help="Enables the debug mode"
     )
 
     parser_new = subparsers.add_parser("new", help="Creates a new project")
@@ -47,11 +45,9 @@ def main():
     group.add_argument(
         "--template", help="Template name to use when creating the new project"
     )
+
     group.add_argument("--url", help="URL to a Git repo containing a project to clone")
     group.add_argument("--blank", action="store_true", help="Alias to --template blank")
-    parser_new.add_argument(
-        "--debug", action="store_true", help="Enables the debug mode"
-    )
 
     subparsers.add_parser(
         "createdb",
@@ -83,8 +79,7 @@ def main():
     # This is useful for commands that have no access to a custom config.toml
     # file, such as "new" and "list-templates"
     if "debug" in args and args.debug:
-        global _DEBUG
-        _DEBUG = True
+        CONFIG.toggle_debug()
         logger.setLevel(logging.DEBUG)
         for handler in logger.handlers:
             handler.setLevel(logging.DEBUG)
@@ -119,5 +114,9 @@ def main():
                 CONFIG.load_config()
         _get_handler()(args)
     except Exception as e:
-        logger.error("A fatal error occurred: {}".format(e))
-        sys.exit(1)
+        match CONFIG.debug:
+            case True:
+                raise e
+            case False:
+                logger.error("A fatal error occurred: {}".format(e))
+                sys.exit(1)

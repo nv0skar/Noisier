@@ -6,19 +6,19 @@ from typing import List, Optional, Tuple
 from msgspec import Struct, field
 
 
-class TableField(Struct, frozen=True, gc=False):
+class TableField(Struct, frozen=True, gc=False, forbid_unknown_fields=True):
     name: str
     auto_increment: Optional[bool]
 
 
-class TableSchema(Struct, frozen=True, gc=False):
+class TableSchema(Struct, frozen=True, gc=False, forbid_unknown_fields=True):
     name: str
     fields: List[TableField]
     primary_key_field: str
     is_view: bool
 
 
-class DatabaseSchema(Struct, gc=False):
+class DatabaseSchema(Struct, gc=False, forbid_unknown_fields=True):
     tables: List[TableSchema] = field(default_factory=list)
 
     @staticmethod

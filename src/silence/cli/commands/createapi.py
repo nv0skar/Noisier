@@ -1,14 +1,14 @@
 from silence.__main__ import CONFIG
 
 
-def handle(args):
-    from silence.server.endpoint_creator import create_api
+def handle(_):
+    from silence.server.endpoint_parser import create_api
 
     if CONFIG.get().general.auto_endpoints:
-        print("Creating the default endpoints and generating the API filessilence.")
+        print("Dumping generated endpoints to the /endpoints/_auto folder...")
         create_api()
         print("Done!")
     else:
-        print(
+        raise Exception(
             "Endpoint auto generation is disabled in the settings, you need to enable it before you can use this command."
         )

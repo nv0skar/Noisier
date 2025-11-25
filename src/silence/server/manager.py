@@ -1,18 +1,17 @@
+from silence.server.endpoint_loader import load_endpoints, load_default_endpoints
+from silence.server import endpoint_setup as server_endpoint
+from silence.__main__ import CONFIG
+from silence.exceptions import HTTPError
+from silence.logging.default_logger import logger
+from silence.logging.flask_filter import FlaskFilter
+
 from flask import Flask, jsonify
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 import click
 
-from silence.server.endpoint_loader import load_user_endpoints, load_default_endpoints
-from silence.__main__ import CONFIG
-from silence.exceptions import HTTPError
-from silence.logging.default_logger import logger
-from silence.logging.flask_filter import FlaskFilter
-from silence.server.api_summary import APISummary
-
 from os.path import join
 from os import getcwd
-import mimetypes
 import logging
 
 ###############################################################################
@@ -25,7 +24,6 @@ static_folder = (
 )
 APP = Flask(__name__, static_folder=static_folder)
 cors = CORS(APP, resources={f"{CONFIG.get().server.api_prefix}*": {"origins": "*"}})
-API_SUMMARY = APISummary()
 
 
 def setup():
@@ -89,10 +87,10 @@ def setup():
     # Load the user-provided API endpoints and the default ones
     if CONFIG.get().server.serve_api:
         load_default_endpoints()
-        load_user_endpoints()
+        load_endpoints()
 
         if CONFIG.get().general.display_endpoints_on_start:
-            API_SUMMARY.print_endpoints()
+            server_endpoint.print_endpoints()
 
     # Load the web static files
     if CONFIG.get().server.serve_static_files:
