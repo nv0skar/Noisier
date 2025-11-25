@@ -58,7 +58,9 @@ class EndpointsGlobal:
         for _name, _endpoint in self._endpoints.items():
             if name.casefold() == _name.casefold():
                 if not ignore_if_exists and not _endpoint._generated:
-                    raise Exception("There's an endpoint with the same name.")
+                    raise Exception(
+                        "There's an endpoint with the same name '{}'.".format(_name)
+                    )
                 else:
                     return
             if (

@@ -2,14 +2,26 @@ from silence.logging.default_logger import logger
 from silence.config import ConfigError
 from silence.__main__ import CONFIG
 from silence.server import endpoint_parser, manager as server_manager
-from silence.server.endpoint_setup import ENDPOINTS
 from silence.utils.check_update import check_for_new_version
 from silence.__version__ import __version__
 
+import sys
 
-def handle(args):
+
+def handle(_):
     logger.info("Silence v%s", __version__)
     logger.debug("Current settings:\n%s", CONFIG.get())
+
+    if getattr(sys, "_is_gil_enabled", lambda: True)():
+        logger.warning(
+            "Silence is running with a GIL enabled Python interpreter. "
+            "A performance increase may be observed when using GIL-less "
+            "Python interpreter (free-threaded Python or PyPy).\n"
+            "If you're already using a GIL-less Python interpreter, "
+            "disable the GIL manually."
+        )
+    else:
+        logger.debug("Running on a GIL-less Python interpreter.")
 
     new_ver = check_for_new_version()
     if new_ver:
