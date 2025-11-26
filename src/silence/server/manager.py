@@ -109,6 +109,6 @@ def run():
     APP.run(
         host=CONFIG.get().server.listen_addr[0],
         port=CONFIG.get().server.listen_addr[1],
-        debug=CONFIG.debug,
+        debug=False,  # Doubles output?
         threaded=True,
     )

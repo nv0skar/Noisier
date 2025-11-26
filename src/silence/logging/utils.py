@@ -7,10 +7,6 @@ from colorama import Fore, Style
 from datetime import datetime
 import re
 
-#
-# Auxiliary operations for cli data logging.
-#
-
 colorama.init()
 
 # Regex to remove ANSI color codes from log lines

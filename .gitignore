@@ -10,5 +10,6 @@ wheels/
 .venv
 
 #extras
+*/.DS_Store
 *.lock
 requirements*
