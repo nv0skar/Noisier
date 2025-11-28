@@ -1,4 +1,3 @@
-import logging
 from silence.sql.tables import DATABASE_SCHEMA, TableField
 from silence.logging.default_logger import logger
 from silence.__main__ import CONFIG
@@ -14,9 +13,20 @@ from msgspec import toml
 
 
 # Entry point for the CLI command
-def create_api():
-    load_endpoints()
-    generate_db_endpoints()
+def load_routes():
+    load_fs_endpoints()
+    if CONFIG.get().general.auto_endpoints:
+        generate_db_endpoints()
+    if CONFIG.get().server.summary_endpoint:
+        ENDPOINTS.put(
+            "_generated_summary",
+            EndpointDefinition(
+                "/",
+                HttpMethod.GET,
+                description="Returns the data regarding the API endpoints",
+                query=None,
+            ),
+        )
 
 
 # TODO: GENERATE ENDPOINTS ON RUNTIME WITHOUT READING FROM THE _auto file
@@ -170,25 +180,6 @@ def generate_db_endpoints():
             with open(auto_dir + f"/{table.name}.toml", "wb") as f:
                 f.write(toml.encode(endpoints))
 
-    # Finally, generate the .js API module for the allowed auth operations
-    auth_endpoints = {}
-    if CONFIG.get().app.auth.enable:
-        auth_endpoints["login"] = {
-            "route": "/login",
-            "method": "POST",
-            "description": "Logs in using an identifier and password",
-        }
-
-    if CONFIG.get().app.auth.allow_signup:
-        auth_endpoints["register"] = {
-            "route": "/register",
-            "method": "POST",
-            "description": "Registers a new user and stores the password safely in the database",
-        }
-
-    if auth_endpoints:
-        generate_API_file_for_endpoints(auth_endpoints, "auth", None)
-
 
 # Create generic .js files to consume the created endpoints.
 def generate_API_file_for_endpoints(endpoints, table_name, pk_name):
@@ -253,7 +244,7 @@ def generate_api_text(name, pk_name, endpoint_data):
     }},"""
 
 
-def load_endpoints():
+def load_fs_endpoints():
     endpoints_dir = getcwd() + "/endpoints"
 
     logger.debug("Looking for endpoints at {}".format(endpoints_dir))

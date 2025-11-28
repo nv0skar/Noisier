@@ -2,7 +2,6 @@ from pymysql.cursors import DictCursor
 
 from silence.db.connector import get_conn
 from silence.exceptions import DatabaseError
-from silence.decorators import db_call
 from silence.logging.default_logger import logger
 
 #
@@ -67,17 +66,13 @@ def update(q, params=None):
         conn.close()
 
 
-###############################################################################
 # Safe wrappers for the API, which return an HTTPError instead of a
 # DatabaseError
-###############################################################################
 
 
-@db_call
 def api_safe_query(*args, **kwargs):
     return query(*args, **kwargs)
 
 
-@db_call
 def api_safe_update(*args, **kwargs):
     return update(*args, **kwargs)

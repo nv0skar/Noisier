@@ -2,11 +2,11 @@ from silence.__main__ import CONFIG
 
 
 def handle(_):
-    from silence.server.endpoint_parser import create_api
+    from silence.server.endpoint_parser import load_routes
 
     if CONFIG.get().general.auto_endpoints:
         print("Dumping generated endpoints to the /endpoints/_auto folder...")
-        create_api()
+        load_routes()
         print("Done!")
     else:
         raise Exception(

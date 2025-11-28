@@ -2,15 +2,15 @@ from silence.db import dal
 from silence import sql as SQL
 from silence.sql import get_sql_op
 from silence.__main__ import CONFIG
-from silence.server.endpoint import EndpointDefinition
+from silence.server.endpoint import EndpointDefinition, regex_path
 from silence.sql.tables import DATABASE_SCHEMA
 from silence.utils.min_type import Min
 from silence.auth.tokens import check_token
 from silence.logging.default_logger import logger
 from silence.logging import utils as log_utils
 from silence.sql.converter import silence_to_mysql
-from silence.server import manager as server_manager
-from silence.exceptions import HTTPError, TokenError
+from silence.server import serve as server_manager
+from silence.exceptions import TokenError
 
 from typing import Optional, Dict, TypeAlias
 
@@ -37,12 +37,21 @@ class EndpointsGlobal:
     def __init__(self):
         self._endpoints = dict()
 
-    def get_by_route(self, route: str) -> Optional[EndpointDefinition]:
+    def get_by_raw_route(self, route: str) -> Optional[EndpointDefinition]:
         return next(
-            endpoint
-            for _, endpoint in self._endpoints.items()
-            if endpoint.route == route
+            (
+                endpoint
+                for _, endpoint in self._endpoints.items()
+                if endpoint.route == route
+            ),
+            None,
         )
+
+    def find_matching_route(self, route: str) -> Optional[EndpointDefinition]:
+        for _, endpoint in self._endpoints.items():
+            if regex_path(endpoint.route).match(route):
+                return endpoint
+        return None
 
     """
     An endpoint will already exist if there is another one that has the same identifier or
@@ -56,6 +65,16 @@ class EndpointsGlobal:
         ignore_if_exists: bool = True,
     ):
         for _name, _endpoint in self._endpoints.items():
+            if (
+                endpoint._generated
+                and not CONFIG.get().general.auto_endpoints
+                and endpoint.query is not None
+            ):
+                logger.debug(
+                    "Tried to put {} in the endpoint map, auto-generated endpoints are disabled.".format(
+                        endpoint
+                    )
+                )
             if name.casefold() == _name.casefold():
                 if not ignore_if_exists and not _endpoint._generated:
                     raise Exception(

@@ -1,7 +1,11 @@
 from silence.logging.default_logger import logger
 from silence.config import ConfigError
 from silence.__main__ import CONFIG
-from silence.server import endpoint_parser, manager as server_manager
+from silence.server import (
+    endpoint_parser,
+    serve as server_manager,
+    endpoint_setup as server_endpoint,
+)
 from silence.utils.check_update import check_for_new_version
 from silence.__version__ import __version__
 
@@ -15,8 +19,12 @@ def handle(_):
     if getattr(sys, "_is_gil_enabled", lambda: True)():
         logger.warning(
             "Silence is running with a GIL enabled Python interpreter. "
-            "A performance increase may be observed when using GIL-less "
+            "A performance increase MIGHT be observed when using GIL-less "
             "Python interpreter (free-threaded Python or PyPy).\n"
+            "However this performance increase is NOT guaranteed as the"
+            "server runtime doesn't support real parallel threading."
+            "Regardless of using a GIL or GIL-less Python interpreter "
+            "I/O async tasks' performance will be similar.\n"
             "If you're already using a GIL-less Python interpreter, "
             "disable the GIL manually."
         )
@@ -48,6 +56,7 @@ def handle(_):
             "is disabled."
         )
 
-    endpoint_parser.create_api()
-    server_manager.setup()
-    server_manager.run()
+    endpoint_parser.load_routes()
+    if CONFIG.get().general.display_endpoints_on_start:
+        server_endpoint.print_endpoints()
+    server_manager.serve()

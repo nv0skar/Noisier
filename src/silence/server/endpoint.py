@@ -1,5 +1,9 @@
 from typing import List, Optional
 from enum import StrEnum
+from functools import lru_cache
+from re import Pattern
+
+import re
 
 from msgspec import Struct, field
 
@@ -12,7 +16,7 @@ class HttpMethod(StrEnum):
 
 
 class EndpointDefinition(
-    Struct, gc=False, forbid_unknown_fields=True, omit_defaults=True
+    Struct, frozen=True, gc=False, forbid_unknown_fields=True, omit_defaults=True
 ):
     route: str
     method: HttpMethod
@@ -22,3 +26,11 @@ class EndpointDefinition(
     required_auth: bool = field(default=False)
     allowed_roles: List[str] = field(default_factory=list)
     _generated: bool = field(default=False)
+
+
+@lru_cache(maxsize=None, typed=True)
+@staticmethod
+def regex_path(route: str) -> Pattern:
+    pattern = re.sub(r"\$([a-zA-Z_][a-zA-Z0-9_]*)", r"(?P<\1>[^/]+)", route)
+    regex_pattern = f"^{pattern}$"
+    return re.compile(regex_pattern)
