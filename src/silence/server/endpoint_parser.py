@@ -29,9 +29,6 @@ def load_routes():
         )
 
 
-# TODO: GENERATE ENDPOINTS ON RUNTIME WITHOUT READING FROM THE _auto file
-
-
 # Get the entities from the database and the existing user endpoints and
 # create CRUD endpoint files (json) for the remaining o  nes.
 def generate_db_endpoints():
@@ -82,6 +79,7 @@ def generate_db_endpoints():
                             "Gets all entries from '{}'.".format(table.name),
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
                 case HttpMethod.GET if not table.is_view:
                     ENDPOINTS.put(
@@ -93,6 +91,7 @@ def generate_db_endpoints():
                             "Gets all entries from '{}'.".format(table.name),
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
                     ENDPOINTS.put(
                         "_generated_{}_getById".format(table.name.casefold()),
@@ -109,6 +108,7 @@ def generate_db_endpoints():
                             ),
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
                 case HttpMethod.POST if not table.is_view:
                     ENDPOINTS.put(
@@ -127,6 +127,7 @@ def generate_db_endpoints():
                             # required_auth=CONFIG.get().app.auth.enable,
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
 
                 case HttpMethod.PUT if not table.is_view:
@@ -149,6 +150,7 @@ def generate_db_endpoints():
                             # required_auth=CONFIG.get().app.auth.enable,
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
 
                 case HttpMethod.DELETE if not table.is_view:
@@ -169,6 +171,7 @@ def generate_db_endpoints():
                             # required_auth=CONFIG.get().app.auth.enable,
                             _generated=True,
                         ),
+                        copy_dict=endpoints,
                     )
 
         # Create *all* the .js files for the API.
@@ -274,6 +277,9 @@ def load_fs_endpoints():
                         "be marked as _generated."
                     )
                 for name, endpoint in endpoints.items():
+                    endpoint.route = (
+                        endpoint.route.casefold()
+                    )  # Make routes case insensitive
                     ENDPOINTS.put(name, endpoint, ignore_if_exists=False)
             except Exception as e:
                 e.add_note("Cannot deserialize endpoint definition.")

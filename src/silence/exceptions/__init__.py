@@ -1,4 +1,4 @@
-from msgspec import Struct, field
+from msgspec import Struct
 
 
 class DatabaseError(Exception):
@@ -27,4 +27,13 @@ class TokenError(Exception):
 
 class ServerError(Struct, frozen=True):
     code: int
-    reason: str = field(default="A server error has occurred.")
+    reason: str
+
+
+class ServerErrorWrapper(Exception):
+    __slots__ = ["_error"]
+
+    _error: ServerError
+
+    def __init__(self, error: ServerError):
+        self._error = error

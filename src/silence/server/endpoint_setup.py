@@ -1,8 +1,13 @@
 from silence.db import dal
 from silence import sql as SQL
-from silence.sql import get_sql_op
+from silence.sql import get_sql_op, SqlOps
 from silence.__main__ import CONFIG
-from silence.server.endpoint import EndpointDefinition, regex_path
+from silence.server.endpoint import (
+    EndpointDefinition,
+    EndpointWithValue,
+    HttpMethod,
+    RoutePattern,
+)
 from silence.sql.tables import DATABASE_SCHEMA
 from silence.utils.min_type import Min
 from silence.auth.tokens import check_token
@@ -10,48 +15,59 @@ from silence.logging.default_logger import logger
 from silence.logging import utils as log_utils
 from silence.sql.converter import silence_to_mysql
 from silence.server import serve as server_manager
-from silence.exceptions import TokenError
+from silence.exceptions import TokenError, ServerError, ServerErrorWrapper
 
-from typing import Optional, Dict, TypeAlias
+from typing import List, Optional, Dict, TypeAlias
 
+import logging
 import re
 
 from flask import jsonify, request
 
-
 OP_VERBS = {
-    SQL.SELECT: "get",
-    SQL.INSERT: "post",
-    SQL.UPDATE: "put",
-    SQL.DELETE: "delete",
+    SqlOps.SELECT: "get",
+    SqlOps.INSERT: "post",
+    SqlOps.UPDATE: "put",
+    SqlOps.DELETE: "delete",
 }
+
 
 Endpoints: TypeAlias = Dict[str, EndpointDefinition]
 
 
 class EndpointsGlobal:
-    __slots__ = "_endpoints"
+    __slots__ = ["_endpoints", "_static_routes_cache", "_parameterized_routes_cache"]
 
     _endpoints: Dict[str, EndpointDefinition]
 
+    _static_routes_cache: Dict[RoutePattern, str]
+    _parameterized_routes_cache: Dict[RoutePattern, str]
+
     def __init__(self):
         self._endpoints = dict()
+        self._static_routes_cache = dict()
+        self._parameterized_routes_cache = dict()
 
-    def get_by_raw_route(self, route: str) -> Optional[EndpointDefinition]:
-        return next(
-            (
-                endpoint
-                for _, endpoint in self._endpoints.items()
-                if endpoint.route == route
-            ),
-            None,
-        )
-
-    def find_matching_route(self, route: str) -> Optional[EndpointDefinition]:
-        for _, endpoint in self._endpoints.items():
-            if regex_path(endpoint.route).match(route):
-                return endpoint
-        return None
+    def find_matching_route(
+        self, route: str, method: HttpMethod
+    ) -> Optional[EndpointWithValue]:
+        (route_pattern, param_value) = RoutePattern.new_from_request(route, method)
+        try:
+            match route_pattern.parameterized:
+                case True:
+                    return EndpointWithValue(
+                        self._endpoints[
+                            self._parameterized_routes_cache[route_pattern]
+                        ],
+                        param_value,
+                    )
+                case False:
+                    return EndpointWithValue(
+                        self._endpoints[self._static_routes_cache[route_pattern]],
+                        None,
+                    )
+        except KeyError:
+            return None
 
     """
     An endpoint will already exist if there is another one that has the same identifier or
@@ -63,18 +79,19 @@ class EndpointsGlobal:
         name: str,
         endpoint: EndpointDefinition,
         ignore_if_exists: bool = True,
+        copy_dict: Optional[Dict[str, EndpointDefinition]] = None,
     ):
-        for _name, _endpoint in self._endpoints.items():
-            if (
-                endpoint._generated
-                and not CONFIG.get().general.auto_endpoints
-                and endpoint.query is not None
-            ):
-                logger.debug(
-                    "Tried to put {} in the endpoint map, auto-generated endpoints are disabled.".format(
-                        endpoint
-                    )
+        if (
+            endpoint._generated
+            and not CONFIG.get().general.auto_endpoints
+            and endpoint.query is not None
+        ):
+            logger.debug(
+                "Tried to put {} in the endpoint map, auto-generated endpoints are disabled.".format(
+                    endpoint
                 )
+            )
+        for _name, _endpoint in self._endpoints.items():
             if name.casefold() == _name.casefold():
                 if not ignore_if_exists and not _endpoint._generated:
                     raise Exception(
@@ -94,7 +111,35 @@ class EndpointsGlobal:
                     )
                 else:
                     return
+        # Checks whether the SQL operation and the HTTP verb match
+        if endpoint.query is not None:
+            sql_op = get_sql_op(endpoint.query)
+            if sql_op in OP_VERBS:
+                expected_verb = OP_VERBS[sql_op]
+                if expected_verb.casefold() != endpoint.method.casefold():
+                    raise Exception(
+                        "The query verb and the endpoint's method "
+                        "are not compatible. The correct method would be {}".format(
+                            OP_VERBS[sql_op]
+                        )
+                    )
+            else:
+                logging.warning(
+                    "Cannot statically check {}'s query {}, unsupported query verb.".format(
+                        name, endpoint.query
+                    )
+                )
+
+        if copy_dict is not None:
+            copy_dict[name] = endpoint
         self._endpoints[name] = endpoint
+        # Cache the routes' pattern to speed up it's lookup
+        route_pattern = RoutePattern.new_from_parser(endpoint.route, endpoint.method)
+        match route_pattern.parameterized:
+            case True:
+                self._parameterized_routes_cache[route_pattern] = name
+            case False:
+                self._static_routes_cache[route_pattern] = name
 
 
 ENDPOINTS: EndpointsGlobal = EndpointsGlobal()
@@ -178,7 +223,7 @@ def setup_endpoint(endpoint: EndpointDefinition):
     # Get the required SQL operation
     sql_op = get_sql_op(endpoint.query)
 
-    # If it's a SELECT or a DELETE, make sure that all SQL params can be
+    # If it's a SELECT or a DELETE, m ake sure that all SQL params can be
     # obtained from the url
     if sql_op in (SQL.SELECT, SQL.DELETE):
         check_params_match(sql_params, url_params, endpoint.route)
@@ -395,7 +440,7 @@ def check_method(sql, verb, endpoint):
 
         if correct_verb != verb.lower():
             # Warn the user about the correct verb to use
-            logger.warn(
+            logger.warning(
                 f"The '{verb.upper()}' HTTP verb is not correct for the SQL {sql_op.upper()} "
                 + f"operation in endpoint {verb.upper()} {endpoint}, the correct verb is {correct_verb.upper()}."
             )
@@ -437,7 +482,7 @@ def check_auth_roles(auth_required, allowed_roles, method, route):
 
 # Returns a list of $params in a SQL query or endpoint route,
 # without the $'s
-def extract_params(string):
+def extract_params(string) -> List[str]:
     res = re.findall(r"\$\w+", string)
     return [x[1:] for x in res]
 
